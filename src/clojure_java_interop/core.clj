@@ -3,7 +3,10 @@
   (:import [java.nio.file  Paths]
            [java.time      LocalDate]
            [java.util      Date Map$Entry UUID]
-           [java.awt.image BufferedImage]))
+           [java.awt.image BufferedImage]
+           [javax.imageio  ImageIO];
+           [java.awt       Color];
+           [java.io        File]));
 
 (comment
   (javadoc BufferedImage)
@@ -110,3 +113,33 @@ arr              ; ["A", "B", "C"]
 
 ;; in Java: Map.Entry
 Map$Entry ; java.util.Map$Entry
+
+;; ;;;;;;;;;;;
+;; Image stuff
+;; ;;;;;;;;;;;
+
+(comment
+  (javadoc File)
+  (javadoc ImageIO))
+
+;; (set! *warn-on-reflection* true)
+
+(defn invert-pic [old-file-name new-file-name]
+  (let [f-old (File. old-file-name)
+        f-new (File. new-file-name)
+        image (ImageIO/read f-old)]
+    (doseq [x (range (.getWidth image))
+            y (range (.getHeight image))]
+      (let [col    (Color. (.getRGB image x y))
+            newCol (Color. (- 255 (.getRed   col))
+                           (- 255 (.getGreen col))
+                           (- 255 (.getBlue  col)))]
+        (.setRGB image x y (.getRGB newCol))))
+    (ImageIO/write image "PNG" f-new)));
+
+(comment
+  (time (invert-pic "pic.png"       "invert_pic.png"))       ; (out) "Elapsed time:  110.928452 msecs"
+  (time (invert-pic "wall.jpg"      "invert_wall.png"))      ; (out) "Elapsed time: 5069.122232 msecs"
+  (time (invert-pic "tomato.jpg"    "invert_tomato.png"))    ; (out) "Elapsed time: 8697.14538  msecs"
+  (time (invert-pic "rusty_car.jpg" "invert_rusty_car.png")) ; (out) "Elapsed time: 7111.536754 msecs"
+  (time (invert-pic "hall.jpg"      "invert_hall.png")))     ; (out) "Elapsed time: 8387.954801 msecs"
